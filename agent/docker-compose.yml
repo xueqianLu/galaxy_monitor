@@ -1,0 +1,75 @@
+version: "3.8"
+
+# ============================================================
+# Agent 端 - 部署在每台被控机上
+# ============================================================
+# 说明：
+#   - node-exporter: 采集系统指标 (CPU/内存/磁盘/网络)
+#   - cAdvisor: 采集容器指标 (镜像名、容器名、运行时长、启动命令等)
+#   - promtail: 采集容器日志并推送到管理端 Loki
+# ============================================================
+
+services:
+  # ----------------------------------------------------------
+  # Node Exporter - 系统指标采集
+  # ----------------------------------------------------------
+  node-exporter:
+    image: prom/node-exporter:v1.8.1
+    container_name: node-exporter
+    restart: unless-stopped
+    ports:
+      - "9100:9100"
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - "--path.procfs=/host/proc"
+      - "--path.sysfs=/host/sys"
+      - "--path.rootfs=/rootfs"
+      - "--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)"
+    networks:
+      - agent
+
+  # ----------------------------------------------------------
+  # cAdvisor - 容器指标采集
+  # ----------------------------------------------------------
+  # 提供容器级别的指标：镜像名称、容器名称、运行时长、资源使用等
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.49.1
+    container_name: cadvisor
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    privileged: true
+    devices:
+      - /dev/kmsg:/dev/kmsg
+    networks:
+      - agent
+
+  # ----------------------------------------------------------
+  # Promtail - 日志采集与推送
+  # ----------------------------------------------------------
+  # 采集 Docker 容器日志并推送到管理端 Loki
+  promtail:
+    image: grafana/promtail:2.9.9
+    container_name: promtail
+    restart: unless-stopped
+    volumes:
+      - ./promtail-config.yaml:/etc/promtail/config.yml:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /var/log:/var/log:ro
+    command: -config.file=/etc/promtail/config.yml
+    networks:
+      - agent
+
+networks:
+  agent:
+    driver: bridge

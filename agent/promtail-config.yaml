@@ -1,0 +1,53 @@
+# ============================================================
+# Promtail 配置文件
+# ============================================================
+# 说明：
+#   - 采集 /var/lib/docker/containers 下的容器日志
+#   - 将日志推送到管理端 Loki
+#   - 请将 <MANAGER_TAILSCALE_IP> 替换为管理端的 Tailscale IP 地址
+# ============================================================
+
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+
+positions:
+  filename: /tmp/positions.yaml
+
+# ============================================================
+# Loki 推送地址
+# ============================================================
+# 请将 <MANAGER_TAILSCALE_IP> 替换为管理端的实际 Tailscale IP 地址
+clients:
+  - url: http://<MANAGER_TAILSCALE_IP>:3100/loki/api/v1/push
+
+scrape_configs:
+  # ----------------------------------------------------------
+  # Docker 容器日志采集（通过 Docker API 自动发现容器）
+  # ----------------------------------------------------------
+  - job_name: docker
+    docker_sd_configs:
+      - host: unix:///var/run/docker.sock
+        refresh_interval: 10s
+
+    relabel_configs:
+      # 使用容器名称作为标签
+      - source_labels: ["__meta_docker_container_name"]
+        regex: "/(.+)"
+        target_label: container_name
+
+      # 使用镜像名称作为标签
+      - source_labels: ["__meta_docker_container_image"]
+        target_label: image
+
+      # 使用 docker-compose 服务名作为标签（如果存在）
+      - source_labels: ["__meta_docker_container_label_com_docker_compose_service"]
+        target_label: compose_service
+
+      # 使用 docker-compose 项目名作为标签（如果存在）
+      - source_labels: ["__meta_docker_container_label_com_docker_compose_project"]
+        target_label: compose_project
+
+    pipeline_stages:
+      # Docker 日志格式为 JSON，解析其中的 log、stream、time 字段
+      - docker: {}
