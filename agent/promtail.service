@@ -1,0 +1,30 @@
+# ============================================================
+# Promtail - 日志采集与推送 (systemd 服务)
+# ============================================================
+# 说明：
+#   - 采集系统日志和 Docker 容器日志
+#   - 将日志推送到管理端 Loki
+# ============================================================
+
+[Unit]
+Description=Grafana Promtail - Log Collector
+Documentation=https://grafana.com/docs/loki/latest/clients/promtail/
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=promtail
+Group=promtail
+ExecStart=/usr/local/bin/promtail \
+    -config.file=/etc/promtail/config.yml
+Restart=always
+RestartSec=5
+
+# 安全加固
+NoNewPrivileges=yes
+ProtectHome=yes
+ProtectSystem=full
+
+[Install]
+WantedBy=multi-user.target

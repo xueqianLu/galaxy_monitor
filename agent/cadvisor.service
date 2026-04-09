@@ -1,0 +1,23 @@
+# ============================================================
+# cAdvisor - 容器指标采集 (systemd 服务)
+# ============================================================
+# 说明：
+#   - 采集容器级别的指标：镜像名称、容器名称、运行时长、资源使用等
+#   - 默认监听端口 8080
+# ============================================================
+
+[Unit]
+Description=Google cAdvisor - Container Metrics Exporter
+Documentation=https://github.com/google/cadvisor
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/cadvisor \
+    --port=8080
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

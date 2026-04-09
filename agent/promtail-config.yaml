@@ -1,8 +1,9 @@
 # ============================================================
-# Promtail 配置文件
+# Promtail 配置文件（宿主机直接部署模式）
 # ============================================================
 # 说明：
-#   - 采集 /var/lib/docker/containers 下的容器日志
+#   - 采集系统 journal 日志和 /var/log 下的日志文件
+#   - 采集 Docker 容器日志（通过宿主机上的 Docker socket）
 #   - 将日志推送到管理端 Loki
 #   - 请将 <MANAGER_TAILSCALE_IP> 替换为管理端的 Tailscale IP 地址
 # ============================================================
@@ -12,7 +13,7 @@ server:
   grpc_listen_port: 0
 
 positions:
-  filename: /tmp/positions.yaml
+  filename: /var/lib/promtail/positions.yaml
 
 # ============================================================
 # Loki 推送地址
@@ -22,6 +23,31 @@ clients:
   - url: http://<MANAGER_TAILSCALE_IP>:3100/loki/api/v1/push
 
 scrape_configs:
+  # ----------------------------------------------------------
+  # systemd journal 日志采集
+  # ----------------------------------------------------------
+  - job_name: journal
+    journal:
+      max_age: 12h
+      labels:
+        job: systemd-journal
+    relabel_configs:
+      - source_labels: ["__journal__systemd_unit"]
+        target_label: unit
+      - source_labels: ["__journal__hostname"]
+        target_label: hostname
+
+  # ----------------------------------------------------------
+  # 系统日志文件采集（/var/log）
+  # ----------------------------------------------------------
+  - job_name: system
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: varlogs
+          __path__: /var/log/*.log
+
   # ----------------------------------------------------------
   # Docker 容器日志采集（通过 Docker API 自动发现容器）
   # ----------------------------------------------------------

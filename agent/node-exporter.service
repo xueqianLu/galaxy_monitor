@@ -1,0 +1,33 @@
+# ============================================================
+# Node Exporter - 系统指标采集 (systemd 服务)
+# ============================================================
+# 说明：
+#   - 采集 CPU、内存、磁盘、网络等系统指标
+#   - 默认监听端口 9100
+# ============================================================
+
+[Unit]
+Description=Prometheus Node Exporter
+Documentation=https://github.com/prometheus/node_exporter
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=node_exporter
+Group=node_exporter
+ExecStart=/usr/local/bin/node_exporter \
+    --collector.filesystem.mount-points-exclude="^/(sys|proc|dev|host|etc)($$|/)"
+Restart=always
+RestartSec=5
+
+# 安全加固
+NoNewPrivileges=yes
+ProtectHome=yes
+ProtectSystem=strict
+ProtectControlGroups=yes
+ProtectKernelModules=yes
+ProtectKernelTunables=yes
+
+[Install]
+WantedBy=multi-user.target
