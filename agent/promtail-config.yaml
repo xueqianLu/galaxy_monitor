@@ -40,7 +40,7 @@ scrape_configs:
       # 提取容器名称标签（从日志文件路径中提取容器 ID）
       - regex:
           source: filename
-          expression: '/var/lib/docker/containers/(?P<container_id>[^/]+)/.+\.log'
+          expression: '/var/lib/docker/containers/(?P<container_id>[^/]+)/[^/]+\.log'
 
       - labels:
           container_id:
