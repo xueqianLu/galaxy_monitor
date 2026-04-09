@@ -144,7 +144,7 @@ download_and_install_node_exporter() {
     local version="$1"
     local arch="$2"
     local tarball="node_exporter-${version}.linux-${arch}.tar.gz"
-    local url="https://github.com/prometheus/node_exporter/releases/download/v${version}/${tarball}"
+    local url="https://dl.bitheart.org/node_exporter-1.8.1.linux-amd64.tar.gz"
     local tmpdir
 
     tmpdir=$(mktemp -d)
@@ -171,7 +171,7 @@ install_cadvisor() {
 
     # cAdvisor 的 release 二进制文件命名规则
     local binary_name="cadvisor-v${version}-linux-${arch}"
-    local url="https://github.com/google/cadvisor/releases/download/v${version}/${binary_name}"
+    local url="https://dl.bitheart.org/cadvisor-v0.49.1-linux-amd64"
 
     if [[ -f /usr/local/bin/cadvisor ]]; then
         echo "  已安装，重新下载覆盖"
@@ -271,7 +271,7 @@ download_and_install_promtail() {
     local version="$1"
     local arch="$2"
     local zipfile="promtail-linux-${arch}.zip"
-    local url="https://github.com/grafana/loki/releases/download/v${version}/${zipfile}"
+    local url="https://dl.bitheart.org/promtail-linux-amd64.zip"
     local tmpdir
 
     tmpdir=$(mktemp -d)
