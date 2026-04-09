@@ -1,0 +1,57 @@
+# ============================================================
+# Prometheus 配置文件
+# ============================================================
+# 说明：
+#   - 每台被控机（agent）需要暴露 node-exporter (9100) 和 cAdvisor (8080) 端口
+#   - 请将下方的 Tailscale IP 占位符替换为实际的被控机 IP 地址
+# ============================================================
+
+global:
+  scrape_interval: 15s        # 全局抓取间隔
+  evaluation_interval: 15s    # 规则评估间隔
+
+scrape_configs:
+  # ----------------------------------------------------------
+  # Prometheus 自身监控
+  # ----------------------------------------------------------
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  # ----------------------------------------------------------
+  # Node Exporter - 系统指标 (CPU / 内存 / 磁盘 / 网络)
+  # ----------------------------------------------------------
+  # 说明：targets 列表中的 IP 为 Tailscale 组网 IP，端口 9100 为 node-exporter 默认端口
+  # 请将 <TAILSCALE_IP_X> 替换为实际的 Tailscale IP 地址
+  - job_name: "node-exporter"
+    static_configs:
+      - targets:
+          - "<TAILSCALE_IP_1>:9100"   # 服务器 1 — 替换为实际 Tailscale IP
+          - "<TAILSCALE_IP_2>:9100"   # 服务器 2 — 替换为实际 Tailscale IP
+          - "<TAILSCALE_IP_3>:9100"   # 服务器 3 — 替换为实际 Tailscale IP
+          - "<TAILSCALE_IP_4>:9100"   # 服务器 4 — 替换为实际 Tailscale IP
+          - "<TAILSCALE_IP_5>:9100"   # 服务器 5 — 替换为实际 Tailscale IP
+          - "<TAILSCALE_IP_6>:9100"   # 服务器 6 — 替换为实际 Tailscale IP
+          - "<TAILSCALE_IP_7>:9100"   # 服务器 7 — 替换为实际 Tailscale IP
+          - "<TAILSCALE_IP_8>:9100"   # 服务器 8 — 替换为实际 Tailscale IP
+          - "<TAILSCALE_IP_9>:9100"   # 服务器 9 — 替换为实际 Tailscale IP
+          - "<TAILSCALE_IP_10>:9100"  # 服务器 10 — 替换为实际 Tailscale IP
+
+  # ----------------------------------------------------------
+  # cAdvisor - 容器指标 (镜像名、容器名、运行时长、资源使用)
+  # ----------------------------------------------------------
+  # 说明：targets 列表中的 IP 为 Tailscale 组网 IP，端口 8080 为 cAdvisor 默认端口
+  # 请将 <TAILSCALE_IP_X> 替换为实际的 Tailscale IP 地址（与 node-exporter 相同）
+  - job_name: "cadvisor"
+    static_configs:
+      - targets:
+          - "<TAILSCALE_IP_1>:8080"   # 服务器 1 — 替换为实际 Tailscale IP
+          - "<TAILSCALE_IP_2>:8080"   # 服务器 2 — 替换为实际 Tailscale IP
+          - "<TAILSCALE_IP_3>:8080"   # 服务器 3 — 替换为实际 Tailscale IP
+          - "<TAILSCALE_IP_4>:8080"   # 服务器 4 — 替换为实际 Tailscale IP
+          - "<TAILSCALE_IP_5>:8080"   # 服务器 5 — 替换为实际 Tailscale IP
+          - "<TAILSCALE_IP_6>:8080"   # 服务器 6 — 替换为实际 Tailscale IP
+          - "<TAILSCALE_IP_7>:8080"   # 服务器 7 — 替换为实际 Tailscale IP
+          - "<TAILSCALE_IP_8>:8080"   # 服务器 8 — 替换为实际 Tailscale IP
+          - "<TAILSCALE_IP_9>:8080"   # 服务器 9 — 替换为实际 Tailscale IP
+          - "<TAILSCALE_IP_10>:8080"  # 服务器 10 — 替换为实际 Tailscale IP
