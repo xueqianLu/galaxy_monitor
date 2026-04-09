@@ -111,11 +111,13 @@ install_node_exporter() {
     if [[ -f /usr/local/bin/node_exporter ]]; then
         local current_version
         current_version=$(/usr/local/bin/node_exporter --version 2>&1 | head -1 | grep -oP 'version \K[0-9.]+' || echo "unknown")
-        echo "  已安装版本: ${current_version}"
-        if [[ "${current_version}" == "${version}" ]]; then
-            echo "  版本一致，跳过下载"
+        if [[ "${current_version}" == "unknown" ]]; then
+            echo "  警告: 无法识别已安装的 node_exporter 版本，将重新下载"
+            download_and_install_node_exporter "${version}" "${arch}"
+        elif [[ "${current_version}" == "${version}" ]]; then
+            echo "  已安装版本 ${current_version}，版本一致，跳过下载"
         else
-            echo "  版本不一致，重新下载"
+            echo "  已安装版本 ${current_version}，目标版本 ${version}，重新下载"
             download_and_install_node_exporter "${version}" "${arch}"
         fi
     else
@@ -207,11 +209,13 @@ install_promtail() {
     if [[ -f /usr/local/bin/promtail ]]; then
         local current_version
         current_version=$(/usr/local/bin/promtail --version 2>&1 | head -1 | grep -oP 'version \K[0-9.]+' || echo "unknown")
-        echo "  已安装版本: ${current_version}"
-        if [[ "${current_version}" == "${version}" ]]; then
-            echo "  版本一致，跳过下载"
+        if [[ "${current_version}" == "unknown" ]]; then
+            echo "  警告: 无法识别已安装的 promtail 版本，将重新下载"
+            download_and_install_promtail "${version}" "${arch}"
+        elif [[ "${current_version}" == "${version}" ]]; then
+            echo "  已安装版本 ${current_version}，版本一致，跳过下载"
         else
-            echo "  版本不一致，重新下载"
+            echo "  已安装版本 ${current_version}，目标版本 ${version}，重新下载"
             download_and_install_promtail "${version}" "${arch}"
         fi
     else
@@ -234,11 +238,23 @@ install_promtail() {
     chown promtail:promtail /etc/promtail/config.yml
 
     # 确保 promtail 用户可以读取日志文件
-    usermod -aG systemd-journal promtail 2>/dev/null || true
-    usermod -aG adm promtail 2>/dev/null || true
+    if usermod -aG systemd-journal promtail 2>/dev/null; then
+        echo "  已将 promtail 加入 systemd-journal 组"
+    else
+        echo "  警告: 无法将 promtail 加入 systemd-journal 组，journal 日志采集可能不可用"
+    fi
+    if usermod -aG adm promtail 2>/dev/null; then
+        echo "  已将 promtail 加入 adm 组"
+    else
+        echo "  警告: 无法将 promtail 加入 adm 组，/var/log 日志采集可能受限"
+    fi
     # 如果有 Docker，允许 promtail 读取 Docker socket
     if getent group docker &>/dev/null; then
-        usermod -aG docker promtail 2>/dev/null || true
+        if usermod -aG docker promtail 2>/dev/null; then
+            echo "  已将 promtail 加入 docker 组"
+        else
+            echo "  警告: 无法将 promtail 加入 docker 组，Docker 容器日志采集可能不可用"
+        fi
     fi
 
     # 安装 systemd 服务文件
@@ -263,7 +279,7 @@ download_and_install_promtail() {
 
     # promtail 发行包为 zip 格式
     if ! command -v unzip &> /dev/null; then
-        echo "错误: 未找到 unzip，请先安装: apt-get install -y unzip"
+        echo "错误: 未找到 unzip，请先安装 unzip"
         rm -rf "${tmpdir}"
         exit 1
     fi

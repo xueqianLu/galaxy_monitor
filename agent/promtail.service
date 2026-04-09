@@ -24,7 +24,8 @@ RestartSec=5
 # 安全加固
 NoNewPrivileges=yes
 ProtectHome=yes
-ProtectSystem=full
+ProtectSystem=strict
+ReadWritePaths=/var/lib/promtail
 
 [Install]
 WantedBy=multi-user.target
